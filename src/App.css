@@ -61,15 +61,41 @@
   box-sizing: border-box;
 }
 
+.event-checkbox {
+  flex-shrink: 0;
+  align-self: flex-start;
+  width: 1em;
+  height: 1em;
+  margin: 0;
+  margin-top: 4px;
+  cursor: pointer;
+  accent-color: #4a0080;
+  transform: scale(1.6);
+  transform-origin: left center;
+}
+
+.event-checkbox--large {
+  transform: scale(2.4);
+  transform-origin: left center;
+  margin-right: 1em;
+  margin-top: 12px;
+}
+
+.event--done .event-time,
+.event--done .event-label {
+  color: #66bb6a;
+}
+
 .event-time {
   font-weight: bold;
   white-space: nowrap;
   flex-shrink: 0;
-  border: 1px solid #ccc;
+  border: 1px solid #555557;
   border-radius: 3px;
   padding: 0 4px;
   line-height: 1.3;
-  color: #555557;
+  background: #555557;
+  color: #fff;
 }
 
 .event-label {

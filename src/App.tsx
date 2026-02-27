@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import './App.css';
 
 const HOURS = [6, 7, 8];
@@ -9,7 +10,8 @@ const CALENDAR_TOTAL_MINUTES = (CALENDAR_END_HOUR - CALENDAR_START_HOUR) * 60;
 const CURRENT_TIME = { hour: 8, minute: 22 };
 
 interface CalendarEvent {
-  startMinute: number; // minutes from the start of the hour
+  id: string;
+  startMinute: number;
   durationMinutes: number;
   label: string;
   color: string;
@@ -17,20 +19,20 @@ interface CalendarEvent {
 
 const EVENTS_BY_HOUR: Record<number, CalendarEvent[]> = {
   6: [
-    { startMinute: 0,  durationMinutes: 15, label: '🥱☀️ Wake up',          color: '#ffe0b2' },
-    { startMinute: 15, durationMinutes: 45, label: '📺🥣 TV and breakfast',  color: '#fff9c4' },
+    { id: '6-0',  startMinute: 0,  durationMinutes: 15, label: '🥱☀️ Wake up',          color: '#ffe0b2' },
+    { id: '6-15', startMinute: 15, durationMinutes: 45, label: '📺🥣 TV and breakfast',  color: '#fff9c4' },
   ],
   7: [
-    { startMinute: 0,  durationMinutes: 15, label: '📺 Breakfast (no TV)',   color: '#fff9c4' },
-    { startMinute: 15, durationMinutes: 45, label: '🦄🌈 Play!',             color: '#e1f5fe' },
+    { id: '7-0',  startMinute: 0,  durationMinutes: 15, label: '📺 Breakfast (no TV)',   color: '#fff9c4' },
+    { id: '7-15', startMinute: 15, durationMinutes: 45, label: '🦄🌈 Play!',             color: '#e1f5fe' },
   ],
   8: [
-    { startMinute: 0,  durationMinutes: 15, label: '👗 Get dressed',         color: '#ffcccc' },
-    { startMinute: 15, durationMinutes: 5,  label: '🪮💆‍♀️ Hair done',         color: '#f0e0cc' },
-    { startMinute: 20, durationMinutes: 5,  label: '🥪🎒 Pack bag',          color: '#e8ccff' },
-    { startMinute: 25, durationMinutes: 5,  label: '👟🩴 Shoes on',          color: '#fffacc' },
-    { startMinute: 30, durationMinutes: 10, label: '🏃‍♀️🏃‍♂️ Go to school',    color: '#ccf0d8' },
-    { startMinute: 40, durationMinutes: 20, label: '🚪📚 Classrooms open',   color: '#cce8ff' },
+    { id: '8-0',  startMinute: 0,  durationMinutes: 15, label: '👗 Get dressed',         color: '#ffcccc' },
+    { id: '8-15', startMinute: 15, durationMinutes: 5,  label: '🪮💆‍♀️ Hair done',         color: '#f0e0cc' },
+    { id: '8-20', startMinute: 20, durationMinutes: 5,  label: '🥪🎒 Pack bag',          color: '#e8ccff' },
+    { id: '8-25', startMinute: 25, durationMinutes: 5,  label: '👟🩴 Shoes on',          color: '#fffacc' },
+    { id: '8-30', startMinute: 30, durationMinutes: 10, label: '🏃‍♀️🏃‍♂️ Go to school',    color: '#b2dfdb' },
+    { id: '8-40', startMinute: 40, durationMinutes: 20, label: '🚪📚 Classrooms open',   color: '#cce8ff' },
   ],
 };
 
@@ -40,7 +42,13 @@ function formatTime(hour: number, minute: number): string {
   return minute === 0 ? `${h}:00${suffix}` : `${h}:${String(minute).padStart(2, '0')}${suffix}`;
 }
 
-function HourContent({ hour }: { hour: number }) {
+const DONE_COLOR = '#c8e6c9';
+
+function HourContent({ hour, done, onToggle }: {
+  hour: number;
+  done: Set<string>;
+  onToggle: (id: string) => void;
+}) {
   const events = EVENTS_BY_HOUR[hour];
 
   if (!events) {
@@ -49,21 +57,30 @@ function HourContent({ hour }: { hour: number }) {
 
   return (
     <div className="hour-content hour-content--with-events">
-      {events.map((event) => (
-        <div
-          key={event.startMinute}
-          className="event"
-          style={{
-            top: `${(event.startMinute / 60) * 100}%`,
-            height: `${(event.durationMinutes / 60) * 100}%`,
-            backgroundColor: event.color,
-            fontSize: event.durationMinutes > 5 ? '1.8rem' : undefined,
-          }}
-        >
-          <span className="event-time">{formatTime(hour, event.startMinute)}</span>
-          <span className="event-label">{event.label}</span>
-        </div>
-      ))}
+      {events.map((event) => {
+        const isDone = done.has(event.id);
+        return (
+          <div
+            key={event.startMinute}
+            className={`event${isDone ? ' event--done' : ''}`}
+            style={{
+              top: `${(event.startMinute / 60) * 100}%`,
+              height: `${(event.durationMinutes / 60) * 100}%`,
+              backgroundColor: isDone ? DONE_COLOR : event.color,
+              fontSize: event.durationMinutes > 5 ? '1.8rem' : undefined,
+            }}
+          >
+            <input
+              type="checkbox"
+              className={`event-checkbox${event.durationMinutes > 5 ? ' event-checkbox--large' : ''}`}
+              checked={isDone}
+              onChange={() => onToggle(event.id)}
+            />
+            <span className="event-time">{formatTime(hour, event.startMinute)}</span>
+            <span className="event-label">{event.label}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -82,6 +99,16 @@ function CurrentTimeIndicator() {
 }
 
 export default function App() {
+  const [done, setDone] = useState<Set<string>>(new Set());
+
+  function toggleDone(id: string) {
+    setDone((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
   return (
     <div className="calendar">
       <div className="calendar-inner">
@@ -90,7 +117,7 @@ export default function App() {
             <div className="hour-label">
               {hour < 12 ? `${hour}am` : `${hour === 12 ? 12 : hour - 12}pm`}
             </div>
-            <HourContent hour={hour} />
+            <HourContent hour={hour} done={done} onToggle={toggleDone} />
           </div>
         ))}
         <CurrentTimeIndicator />
