@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import './App.css';
+import Confetti from './Confetti';
 
 const HOURS = [6, 7, 8];
 const CALENDAR_START_HOUR = 6;
@@ -19,8 +20,8 @@ interface CalendarEvent {
 
 const EVENTS_BY_HOUR: Record<number, CalendarEvent[]> = {
   6: [
-    { id: '6-0',  startMinute: 0,  durationMinutes: 15, label: '🥱☀️ Wake up',          color: '#ffe0b2' },
-    { id: '6-15', startMinute: 15, durationMinutes: 45, label: '📺🥣 TV and breakfast',  color: '#fff9c4' },
+    { id: '6-0',  startMinute: 0,  durationMinutes: 30, label: '🥱☀️ Wake up',          color: '#ffe0b2' },
+    { id: '6-30', startMinute: 30, durationMinutes: 30, label: '📺🥣 TV and breakfast',  color: '#fff9c4' },
   ],
   7: [
     { id: '7-0',  startMinute: 0,  durationMinutes: 15, label: '📺 Breakfast (no TV)',   color: '#fff9c4' },
@@ -98,16 +99,27 @@ function CurrentTimeIndicator() {
   );
 }
 
+const ALL_EVENTS = Object.values(EVENTS_BY_HOUR).flat();
+
 export default function App() {
   const [done, setDone] = useState<Set<string>>(new Set());
+  const [confettiEmojis, setConfettiEmojis] = useState<string[] | null>(null);
 
   function toggleDone(id: string) {
     setDone((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+        const event = ALL_EVENTS.find((e) => e.id === id);
+        if (event) setConfettiEmojis([event.label]);
+      }
       return next;
     });
   }
+
+  const clearConfetti = useCallback(() => setConfettiEmojis(null), []);
 
   return (
     <div className="calendar">
@@ -122,6 +134,7 @@ export default function App() {
         ))}
         <CurrentTimeIndicator />
       </div>
+      {confettiEmojis && <Confetti emojis={confettiEmojis} onDone={clearConfetti} />}
     </div>
   );
 }
