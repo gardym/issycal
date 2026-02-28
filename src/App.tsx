@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import './App.css';
 import Confetti from './Confetti';
 
@@ -7,8 +7,6 @@ const CALENDAR_START_HOUR = 6;
 const CALENDAR_END_HOUR = 9;
 const CALENDAR_TOTAL_MINUTES = (CALENDAR_END_HOUR - CALENDAR_START_HOUR) * 60;
 
-// Hardcoded for testing — replace with real time later
-const CURRENT_TIME = { hour: 8, minute: 22 };
 
 interface CalendarEvent {
   id: string;
@@ -87,10 +85,17 @@ function HourContent({ hour, done, onToggle }: {
 }
 
 function CurrentTimeIndicator() {
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(interval);
+  }, []);
+
   const minutesFromStart =
-    (CURRENT_TIME.hour - CALENDAR_START_HOUR) * 60 + CURRENT_TIME.minute;
+    (now.getHours() - CALENDAR_START_HOUR) * 60 + now.getMinutes();
   const topPercent = (minutesFromStart / CALENDAR_TOTAL_MINUTES) * 100;
-  const label = formatTime(CURRENT_TIME.hour, CURRENT_TIME.minute);
+  const label = formatTime(now.getHours(), now.getMinutes());
 
   return (
     <div className="current-time" style={{ top: `${topPercent}%` }}>
