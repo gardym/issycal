@@ -22,11 +22,12 @@ const EVENTS_BY_HOUR: Record<number, CalendarEvent[]> = {
     { id: '6-30', startMinute: 30, durationMinutes: 30, label: '📺🥣 TV and breakfast',  color: '#fff9c4' },
   ],
   7: [
-    { id: '7-0',  startMinute: 0,  durationMinutes: 15, label: '📺 Breakfast (no TV)',   color: '#fff9c4' },
+    { id: '7-0',  startMinute: 0,  durationMinutes: 15, label: '🥣 Breakfast (no TV)',   color: '#fff9c4' },
     { id: '7-15', startMinute: 15, durationMinutes: 45, label: '🦄🌈 Play!',             color: '#e1f5fe' },
   ],
   8: [
-    { id: '8-0',  startMinute: 0,  durationMinutes: 15, label: '👗 Get dressed',         color: '#ffcccc' },
+    { id: '8-0',  startMinute: 0,  durationMinutes: 10, label: '👗 Get dressed',         color: '#ffcccc' },
+    { id: '8-10', startMinute: 10, durationMinutes: 5,  label: '🪥🦷 Brush teeth',          color: '#ffb6c1' },
     { id: '8-15', startMinute: 15, durationMinutes: 5,  label: '🪮💆‍♀️ Hair done',         color: '#f0e0cc' },
     { id: '8-20', startMinute: 20, durationMinutes: 5,  label: '🥪🎒 Pack bag',          color: '#e8ccff' },
     { id: '8-25', startMinute: 25, durationMinutes: 5,  label: '👟🩴 Shoes on',          color: '#fffacc' },
@@ -67,13 +68,16 @@ function HourContent({ hour, done, onToggle }: {
               height: `${(event.durationMinutes / 60) * 100}%`,
               backgroundColor: isDone ? DONE_COLOR : event.color,
               fontSize: event.durationMinutes > 5 ? '1.8rem' : undefined,
+              cursor: 'pointer',
             }}
+            onClick={() => onToggle(event.id)}
           >
             <input
               type="checkbox"
               className={`event-checkbox${event.durationMinutes > 5 ? ' event-checkbox--large' : ''}`}
               checked={isDone}
               onChange={() => onToggle(event.id)}
+              onClick={(e) => e.stopPropagation()}
             />
             <span className="event-time">{formatTime(hour, event.startMinute)}</span>
             <span className="event-label">{event.label}</span>
